@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Layout, Card, Form, Input, Button, Typography, Row, Col, message } from 'antd'
-import { Lock, Phone } from 'lucide-react'
+import { Lock, Mail } from 'lucide-react'
+import { login, saveToken, saveUser } from '../api/authentication'
 
 const { Content } = Layout
 const { Title, Text } = Typography
@@ -13,12 +14,24 @@ const Login = () => {
   const onFinish = async (values) => {
     setLoading(true)
     
-    // Simulate login
-    setTimeout(() => {
-      message.success('Login successful!')
+    try {
+      // Call the login API
+      const response = await login(values.email, values.password)
+      
+      if (response.success) {
+        // Save token and user data
+        saveToken(response.data.token)
+        saveUser(response.data.user)
+        
+        message.success('Login successful!')
+        navigate('/dashboard')
+      }
+    } catch (error) {
+      console.error('Login error:', error)
+      message.error(error.message || 'Login failed. Please check your credentials.')
+    } finally {
       setLoading(false)
-      navigate('/dashboard')
-    }, 1500)
+    }
   }
 
   return (
@@ -68,15 +81,15 @@ const Login = () => {
                 size="large"
               >
                 <Form.Item
-                  name="phone"
+                  name="email"
                   rules={[
-                    { required: true, message: 'Please input your phone number!' },
-                    { pattern: /^[0-9]{10}$/, message: 'Please enter valid 10-digit phone number!' }
+                    { required: true, message: 'Please input your email!' },
+                    { type: 'email', message: 'Please enter a valid email!' }
                   ]}
                 >
                   <Input
-                    prefix={<Phone />}
-                    placeholder="Phone Number"
+                    prefix={<Mail />}
+                    placeholder="Email"
                   />
                 </Form.Item>
 
